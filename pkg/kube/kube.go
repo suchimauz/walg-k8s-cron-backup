@@ -2,6 +2,7 @@ package kube
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -43,7 +44,7 @@ func NewKubeJob(client *kubernetes.Clientset, k8scfg *rest.Config, namespace str
 }
 
 func findPodByLabels(client *kubernetes.Clientset, namespace string, labelSelector string) (*v1.Pod, error) {
-	pods, err := client.CoreV1().Pods(namespace).List(metav1.ListOptions{
+	pods, err := client.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{
 		LabelSelector: labelSelector,
 	})
 	if err != nil {
