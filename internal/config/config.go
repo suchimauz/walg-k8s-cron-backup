@@ -49,13 +49,13 @@ type (
 	}
 
 	TelegramNotificationBackup struct {
-		Enabled bool     `envconfig:"tg_backup_notification_enabled" default:"true"`
-		ChatIds []string `envconfig:"tg_backup_notification_chats" split_words:"true"`
+		Enabled bool    `envconfig:"tg_backup_notification_enabled" default:"true"`
+		ChatIds []int64 `envconfig:"tg_backup_notification_chats" split_words:"true"`
 	}
 
 	TelegramNotificationInfo struct {
-		Enabled bool     `envconfig:"tg_info_notification_enabled" default:"true"`
-		ChatIds []string `envconfig:"tg_info_notification_chats" split_words:"true"`
+		Enabled bool    `envconfig:"tg_info_notification_enabled" default:"true"`
+		ChatIds []int64 `envconfig:"tg_info_notification_chats" split_words:"true"`
 	}
 )
 
