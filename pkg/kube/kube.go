@@ -122,6 +122,9 @@ func (kj *KubeJob) Exec(command string, stdin io.Reader) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	if stderr.String() != "" {
+		return "", errors.New(stderr.String())
+	}
 
 	return stdout.String(), nil
 }
