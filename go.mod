@@ -41,6 +41,7 @@ require (
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
 	github.com/joho/godotenv v1.4.0
 	github.com/robfig/cron/v3 v3.0.1
 	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
