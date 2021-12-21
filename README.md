@@ -3,7 +3,9 @@ Service for cron backup Postgres database with WAL-G in k8s cluster
 
 ## Usage
 
-Create **.env** file or pass this env variables to **binary**:
+Create **.env** file and set support variables
+
+## Support environment variables
 
 ```
 K8S_HOST=<host> # example: kube.domain.com or kube.domain.com:6443
