@@ -12,7 +12,6 @@ import (
 	"github.com/suchimauz/walg-k8s-cron-backup/internal/config"
 	cjobs "github.com/suchimauz/walg-k8s-cron-backup/internal/job"
 	"github.com/suchimauz/walg-k8s-cron-backup/pkg/kube"
-	"github.com/suchimauz/walg-k8s-cron-backup/pkg/logger"
 	klog "github.com/suchimauz/walg-k8s-cron-backup/pkg/logger"
 	"github.com/suchimauz/walg-k8s-cron-backup/pkg/storage"
 	"k8s.io/client-go/kubernetes"
@@ -66,7 +65,7 @@ func Run() {
 	// Init storage provider - minio
 	storageProvider, err := newStorageProvider(cfg)
 	if err != nil {
-		logger.Error(err)
+		klog.Errorf("[FileStorage] Provider: %s", err.Error())
 
 		return
 	}

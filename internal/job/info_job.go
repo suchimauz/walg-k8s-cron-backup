@@ -1,7 +1,12 @@
 package job
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
 	"fmt"
+	"regexp"
+	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/suchimauz/walg-k8s-cron-backup/internal/config"
@@ -53,23 +58,28 @@ func (ij *InfoJob) Run() {
 	}
 
 	// Send tg notifications
-	ij.SendNotifications(backupsInfo)
+	ij.sendNotifications(backupsInfo)
+
+	// Save backupsInfo log file to storage
+	ij.saveBackupsInfoFile(backupsInfo)
 
 	klog.Info("[NotifierJob] End processing job!")
 }
 
-func (ij *InfoJob) SendNotifications(bi []*BackupInfo) {
+func (ij *InfoJob) sendNotifications(bi []*BackupInfo) {
 	var msg string
 
-	// If not backups send message for users that backups is not exists
+	fullBackupsInfo := getOnlyFullBackups(bi)
+
+	// If not full backups send message for users that backups is not exists
 	// Else send backups info
-	if len(bi) < 1 {
+	if len(fullBackupsInfo) < 1 {
 		klog.Warn("[NotifierJob] Backups not found!")
 		klog.Info("[NotifierJob] Send notifications of backups not found!")
 
 		msg = "<b>Список бэкапов пуст!</b>"
 	} else {
-		msg = MakeBackupsInfoMessage(bi)
+		msg = MakeBackupsInfoMessage(fullBackupsInfo)
 	}
 
 	// Iterate with config users chat-ids, who get notifications
@@ -102,4 +112,51 @@ func MakeBackupsInfoMessage(bi []*BackupInfo) string {
 	}
 
 	return msg
+}
+
+func (ij *InfoJob) saveBackupsInfoFile(bi []*BackupInfo) error {
+	fullBackupsInfo := getOnlyFullBackups(bi)
+
+	// If not full backups, return non error
+	if len(fullBackupsInfo) < 1 {
+		return nil
+	}
+
+	// Parse fullBackupsInfo to json
+	backupsInfoJson, err := json.Marshal(fullBackupsInfo)
+	if err != nil {
+		return err
+	}
+
+	// Get storage from InfoJob object
+	s3 := ij.Storage
+
+	// Init new empty UploadInput object
+	file := storage.UploadInput{}
+	file.Name = fmt.Sprintf("/logs/%s.json", time.Now().In(config.TimeZone).String())
+	file.ContentType = "application/json"
+	file.Size = int64(len([]rune("kek")))
+	file.File = bytes.NewReader(backupsInfoJson)
+
+	// Upload file to storage
+	_, err = s3.Upload(context.TODO(), file)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func getOnlyFullBackups(bi []*BackupInfo) []*BackupInfo {
+	var preparedBackupsInfo []*BackupInfo
+
+	// Get only full backups info, check backup name
+	for _, backupInfo := range bi {
+		matched, _ := regexp.MatchString("^(.*)_(.*)_(.*)$", backupInfo.BackupName)
+		if matched {
+			preparedBackupsInfo = append(preparedBackupsInfo, backupInfo)
+		}
+	}
+
+	return preparedBackupsInfo
 }
