@@ -6,13 +6,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
-	"time"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/suchimauz/walg-k8s-cron-backup/internal/config"
 	"github.com/suchimauz/walg-k8s-cron-backup/pkg/kube"
-	klog "github.com/suchimauz/walg-k8s-cron-backup/pkg/logger"
 	"github.com/suchimauz/walg-k8s-cron-backup/pkg/storage"
+	"github.com/suchimauz/walg-k8s-cron-backup/pkg/utils"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	klog "github.com/suchimauz/walg-k8s-cron-backup/pkg/logger"
 )
 
 // InfoJob - struct for manage job, which send notifications of backups and etc
@@ -61,14 +62,19 @@ func (ij *InfoJob) Run() {
 	ij.sendNotifications(backupsInfo)
 
 	// Save backupsInfo log file to storage
-	ij.saveBackupsInfoFile(backupsInfo)
+	err = ij.saveBackupsInfoFile(backupsInfo)
+	if err != nil {
+		klog.Errorf("[NotifierJob] Error on upload file: %s", err.Error())
+	}
 
 	klog.Info("[NotifierJob] End processing job!")
 }
 
+// Private method for send telegram notifications
 func (ij *InfoJob) sendNotifications(bi []*BackupInfo) {
 	var msg string
 
+	// Get only full backups
 	fullBackupsInfo := getOnlyFullBackups(bi)
 
 	// If not full backups send message for users that backups is not exists
@@ -114,6 +120,7 @@ func MakeBackupsInfoMessage(bi []*BackupInfo) string {
 	return msg
 }
 
+// Private function for save backups info to storage
 func (ij *InfoJob) saveBackupsInfoFile(bi []*BackupInfo) error {
 	fullBackupsInfo := getOnlyFullBackups(bi)
 
@@ -132,21 +139,29 @@ func (ij *InfoJob) saveBackupsInfoFile(bi []*BackupInfo) error {
 	s3 := ij.Storage
 
 	// Init new empty UploadInput object
-	file := storage.UploadInput{}
-	file.Name = fmt.Sprintf("/logs/%s.json", time.Now().In(config.TimeZone).String())
-	file.ContentType = "application/json"
-	file.Size = int64(len([]rune("kek")))
-	file.File = bytes.NewReader(backupsInfoJson)
+	file := storage.UploadInput{
+		Name: fmt.Sprintf("walg_k8s_cron_backup/logs/backups_%s.json",
+			utils.NowDateTz().Format("2006_01_02T15_04_05")),
+		ContentType: "application/octet-stream",
+		Size:        int64(len(backupsInfoJson)),
+		File:        bytes.NewReader(backupsInfoJson),
+	}
 
 	// Upload file to storage
-	_, err = s3.Upload(context.TODO(), file)
+	path, err := s3.Upload(context.TODO(), file)
 	if err != nil {
 		return err
 	}
 
+	klog.Infof("[FileStorage] Save backups info: %s", path)
+
 	return nil
 }
 
+// Get only full wal-g backups
+// base_00000005000034600000006B -> true
+// base_00000005000034600000006B_D_00000005000033A50000006C -> false
+// backup name, which have _D_SOME is incremental backups
 func getOnlyFullBackups(bi []*BackupInfo) []*BackupInfo {
 	var preparedBackupsInfo []*BackupInfo
 
