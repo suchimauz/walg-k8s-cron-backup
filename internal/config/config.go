@@ -38,16 +38,16 @@ type (
 
 	ExecConfig struct {
 		Backup string `envconfig:"exec_backup" required:"true"`
-		Info   string `envconfig:"exec_info"`
+		Info   string `envconfig:"exec_info" required:"true"`
 	}
 
 	CronConfig struct {
 		Backup string `envconfig:"cron_backup" required:"true"`
-		Info   string `envconfig:"cron_info"`
+		Info   string `envconfig:"cron_info" required:"true"`
 	}
 
 	TelegramConfig struct {
-		BotToken     string `envconfig:"tg_bot_token"`
+		BotToken     string `envconfig:"tg_bot_token" required:"true"`
 		Notification TelegramNotificationConfig
 	}
 
