@@ -23,8 +23,10 @@ func Run() {
 		return
 	}
 
+	// Initialize Kubernetes tls config for set insecure: true of false from config
 	tlsClientConfig := &rest.TLSClientConfig{Insecure: cfg.Kubernetes.Insecure}
 
+	// Initialize Kubernetes BearerToken config
 	kubeConfig := &rest.Config{
 		Host:            cfg.Kubernetes.Host,
 		APIPath:         cfg.Kubernetes.ApiVersion,
@@ -32,6 +34,7 @@ func Run() {
 		TLSClientConfig: *tlsClientConfig,
 	}
 
+	// Create new kubernetes client from kubeConfig
 	clientset, err := kubernetes.NewForConfig(kubeConfig)
 	if err != nil {
 		klog.Errorf("[KubeConfig] %s", err.Error())
@@ -39,6 +42,7 @@ func Run() {
 		return
 	}
 
+	// Create new local KubeJob pkg object
 	kjob, err := kube.NewKubeJob(clientset, kubeConfig, cfg.Kubernetes.Namespace,
 		cfg.Kubernetes.LabelSelector, cfg.Kubernetes.ContainerName)
 	if err != nil {
@@ -47,6 +51,7 @@ func Run() {
 		return
 	}
 
+	// Create new object for telegram api
 	tgbot, err := tgbotapi.NewBotAPI(cfg.Telegram.BotToken)
 	if err != nil {
 		klog.Errorf("[TelegramBotApi] %s", err.Error())
@@ -63,15 +68,19 @@ func Run() {
 		return
 	}
 
-	go cron.Run()
+	// Start the cron scheduler in its own goroutine
+	cron.Start()
 
 	klog.Infof("[Cron] Started! JobIds %a", jobIds)
+
+	// Graceful Shutdown
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
 
 	<-quit
 
+	// Wait jobs and stop
 	cron.Stop()
 
 	klog.Info("[Cron] Stopped! Exit")

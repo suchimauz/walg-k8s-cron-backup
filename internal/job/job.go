@@ -7,14 +7,19 @@ import (
 	"github.com/suchimauz/walg-k8s-cron-backup/pkg/kube"
 )
 
+// Help func for insert need jobs to cron scheduler
 func InsertJobs(cron *cr.Cron, cfg *config.Config, kj *kube.KubeJob, botapi *tgbotapi.BotAPI) ([]cr.EntryID, error) {
+	// Init variables
 	var entryIds []cr.EntryID
 	var eId cr.EntryID
 	var err error
 
+	// Create InfoJob - object for manage job, which send notifications of backups and etc
+	// BackupJob - object for manage job, which send command for backuping postgres db and etc.
 	ij := NewInfoJob(&cfg.Telegram, kj, botapi, cfg.Exec.Info)
 	bj := NewBackupJob(&cfg.Telegram, kj, botapi, cfg.Exec.Backup)
 
+	// Add to exists cron object new jobs
 	eId, err = cron.AddJob(cfg.Cron.Info, ij)
 	if err != nil {
 		return nil, err
@@ -27,5 +32,6 @@ func InsertJobs(cron *cr.Cron, cfg *config.Config, kj *kube.KubeJob, botapi *tgb
 	}
 	entryIds = append(entryIds, eId)
 
+	// Return array of new cron job ids
 	return entryIds, nil
 }

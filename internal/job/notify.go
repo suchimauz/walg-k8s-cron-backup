@@ -24,6 +24,7 @@ import (
 // 	"compressed_size": int64
 // }
 
+// Helper struct for parse wal-g backups info json
 type BackupInfo struct {
 	BackupName       string    `json:"backup_name"`
 	Time             time.Time `json:"time"`
@@ -31,6 +32,7 @@ type BackupInfo struct {
 	CompressedSize   int64     `json:"compressed_size"`
 }
 
+// Func for parse json to struct
 func parseBackupsInfoJson(backupsJson string) ([]*BackupInfo, error) {
 	var backupsInfo []*BackupInfo
 

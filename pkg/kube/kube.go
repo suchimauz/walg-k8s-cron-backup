@@ -17,6 +17,7 @@ import (
 	"k8s.io/client-go/tools/remotecommand"
 )
 
+// Assembly of necessary methods and fields for kubernetes for project
 type KubeJob struct {
 	Client     *kubernetes.Clientset
 	Pod        *v1.Pod
@@ -24,6 +25,7 @@ type KubeJob struct {
 	KubeConfig *rest.Config
 }
 
+// Create new KubeJob struct object
 func NewKubeJob(client *kubernetes.Clientset, k8scfg *rest.Config, namespace string, labelSelector string, containerName string) (*KubeJob, error) {
 	pod, err := findPodByLabels(client, namespace, labelSelector)
 	if err != nil {
@@ -44,9 +46,11 @@ func NewKubeJob(client *kubernetes.Clientset, k8scfg *rest.Config, namespace str
 }
 
 func findPodByLabels(client *kubernetes.Clientset, namespace string, labelSelector string) (*v1.Pod, error) {
-	pods, err := client.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{
-		LabelSelector: labelSelector,
-	})
+	pods, err := client.CoreV1().Pods(namespace).List(
+		context.TODO(), // empty context
+		metav1.ListOptions{
+			LabelSelector: labelSelector, // labelSelector for pod from config
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -65,6 +69,7 @@ func findPodByLabels(client *kubernetes.Clientset, namespace string, labelSelect
 func findContainerByName(pod *v1.Pod, containerName string) (*v1.Container, error) {
 	var foundContainers []v1.Container
 
+	// Search need container by name on pod containers list
 	for _, container := range pod.Spec.Containers {
 		if container.Name == containerName {
 			foundContainers = append(foundContainers, container)
@@ -107,6 +112,7 @@ func (kj *KubeJob) Exec(command string, stdin io.Reader) (string, error) {
 		TTY:       false,
 	}, parameterCodec)
 
+	// Execute over remotecommand
 	exec, err := remotecommand.NewSPDYExecutor(kj.KubeConfig, "POST", req.URL())
 	if err != nil {
 		return "", err
@@ -122,6 +128,8 @@ func (kj *KubeJob) Exec(command string, stdin io.Reader) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	// return error message if stderr with execute not blank
 	if stderr.String() != "" {
 		return "", errors.New(stderr.String())
 	}
