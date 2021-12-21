@@ -7,19 +7,22 @@ import (
 	"github.com/suchimauz/walg-k8s-cron-backup/internal/config"
 	"github.com/suchimauz/walg-k8s-cron-backup/pkg/kube"
 	klog "github.com/suchimauz/walg-k8s-cron-backup/pkg/logger"
+	"github.com/suchimauz/walg-k8s-cron-backup/pkg/storage"
 )
 
 // InfoJob - struct for manage job, which send notifications of backups and etc
 type InfoJob struct {
+	Storage        storage.Provider
 	KubeJob        *kube.KubeJob
-	Notification   *config.TelegramNotificationInfo
+	Notification   *config.TelegramNotificationInfoConfig
 	Exec           string
 	TelegramBotApi *tgbotapi.BotAPI
 }
 
 // Constructor
-func NewInfoJob(telegramCfg *config.Telegram, kj *kube.KubeJob, botapi *tgbotapi.BotAPI, exec string) *InfoJob {
+func NewInfoJob(telegramCfg *config.TelegramConfig, kj *kube.KubeJob, botapi *tgbotapi.BotAPI, storageProvider storage.Provider, exec string) *InfoJob {
 	return &InfoJob{
+		Storage:        storageProvider,
 		KubeJob:        kj,
 		Notification:   &telegramCfg.Notification.Info,
 		Exec:           exec,

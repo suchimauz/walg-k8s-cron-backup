@@ -5,10 +5,11 @@ import (
 	cr "github.com/robfig/cron/v3"
 	"github.com/suchimauz/walg-k8s-cron-backup/internal/config"
 	"github.com/suchimauz/walg-k8s-cron-backup/pkg/kube"
+	"github.com/suchimauz/walg-k8s-cron-backup/pkg/storage"
 )
 
 // Help func for insert need jobs to cron scheduler
-func InsertJobs(cron *cr.Cron, cfg *config.Config, kj *kube.KubeJob, botapi *tgbotapi.BotAPI) ([]cr.EntryID, error) {
+func InsertJobs(cron *cr.Cron, cfg *config.Config, kj *kube.KubeJob, botapi *tgbotapi.BotAPI, storageProvider storage.Provider) ([]cr.EntryID, error) {
 	// Init variables
 	var entryIds []cr.EntryID
 	var eId cr.EntryID
@@ -16,7 +17,7 @@ func InsertJobs(cron *cr.Cron, cfg *config.Config, kj *kube.KubeJob, botapi *tgb
 
 	// Create InfoJob - object for manage job, which send notifications of backups and etc
 	// BackupJob - object for manage job, which send command for backuping postgres db and etc.
-	ij := NewInfoJob(&cfg.Telegram, kj, botapi, cfg.Exec.Info)
+	ij := NewInfoJob(&cfg.Telegram, kj, botapi, storageProvider, cfg.Exec.Info)
 	bj := NewBackupJob(&cfg.Telegram, kj, botapi, cfg.Exec.Backup)
 
 	// Add to exists cron object new jobs

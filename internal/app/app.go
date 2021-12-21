@@ -6,11 +6,15 @@ import (
 	"syscall"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 	cr "github.com/robfig/cron/v3"
 	"github.com/suchimauz/walg-k8s-cron-backup/internal/config"
 	cjobs "github.com/suchimauz/walg-k8s-cron-backup/internal/job"
 	"github.com/suchimauz/walg-k8s-cron-backup/pkg/kube"
+	"github.com/suchimauz/walg-k8s-cron-backup/pkg/logger"
 	klog "github.com/suchimauz/walg-k8s-cron-backup/pkg/logger"
+	"github.com/suchimauz/walg-k8s-cron-backup/pkg/storage"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -59,9 +63,17 @@ func Run() {
 		return
 	}
 
+	// Init storage provider - minio
+	storageProvider, err := newStorageProvider(cfg)
+	if err != nil {
+		logger.Error(err)
+
+		return
+	}
+
 	cron := cr.New(cr.WithSeconds())
 	// Insert jobs to cron
-	jobIds, err := cjobs.InsertJobs(cron, cfg, kjob, tgbot)
+	jobIds, err := cjobs.InsertJobs(cron, cfg, kjob, tgbot, storageProvider)
 	if err != nil {
 		klog.Errorf("[Cron] Error inserting jobs: %s", err.Error())
 
@@ -84,4 +96,18 @@ func Run() {
 	cron.Stop()
 
 	klog.Info("[Cron] Stopped! Exit")
+}
+
+func newStorageProvider(cfg *config.Config) (storage.Provider, error) {
+	client, err := minio.New(cfg.FileStorage.Endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(cfg.FileStorage.AccessKey, cfg.FileStorage.SecretKey, ""),
+		Secure: true,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	provider := storage.NewFileStorage(client, cfg.FileStorage.Bucket, cfg.FileStorage.Endpoint)
+
+	return provider, nil
 }
