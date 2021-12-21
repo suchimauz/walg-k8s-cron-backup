@@ -8,6 +8,8 @@ Create **.env** file and set support variables
 ## Support environment variables
 
 ```
+APP_TIMEZONE=<tz_string> # default: UTC, example: Europe/Paris
+
 K8S_HOST=<host> # example: kube.domain.com or kube.domain.com:6443
 K8S_INSECURE=<boolean> # default = false
 K8S_AUTH_TOKEN=<token> # bearer token
