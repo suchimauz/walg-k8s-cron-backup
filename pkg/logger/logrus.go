@@ -4,6 +4,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// Functions, which implements Logger interface
+
 func Debug(msg ...interface{}) {
 	logrus.Debug(msg...)
 }

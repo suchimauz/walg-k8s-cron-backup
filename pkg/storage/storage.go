@@ -5,6 +5,7 @@ import (
 	"io"
 )
 
+// Object struct for upload file for some storage provider
 type UploadInput struct {
 	File        io.Reader
 	Name        string

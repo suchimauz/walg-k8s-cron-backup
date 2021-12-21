@@ -36,6 +36,7 @@ type BackupInfo struct {
 func parseBackupsInfoJson(backupsJson string) ([]*BackupInfo, error) {
 	var backupsInfo []*BackupInfo
 
+	// Parse json into new BackupInfo object
 	err := json.Unmarshal([]byte(backupsJson), &backupsInfo)
 	if err != nil {
 		return nil, err

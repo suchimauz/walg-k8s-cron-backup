@@ -5,20 +5,22 @@ import (
 	"os/signal"
 	"syscall"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
-	cr "github.com/robfig/cron/v3"
 	"github.com/suchimauz/walg-k8s-cron-backup/internal/config"
-	cjobs "github.com/suchimauz/walg-k8s-cron-backup/internal/job"
 	"github.com/suchimauz/walg-k8s-cron-backup/pkg/kube"
-	klog "github.com/suchimauz/walg-k8s-cron-backup/pkg/logger"
 	"github.com/suchimauz/walg-k8s-cron-backup/pkg/storage"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	cr "github.com/robfig/cron/v3"
+	cjobs "github.com/suchimauz/walg-k8s-cron-backup/internal/job"
+	klog "github.com/suchimauz/walg-k8s-cron-backup/pkg/logger"
 )
 
 func Run() {
+	// Initialize config
 	cfg, err := config.Init()
 	if err != nil {
 		klog.Errorf("[ENV] %s", err.Error())
@@ -70,6 +72,7 @@ func Run() {
 		return
 	}
 
+	// Make new cron object, calls constructor
 	cron := cr.New(cr.WithSeconds())
 	// Insert jobs to cron
 	jobIds, err := cjobs.InsertJobs(cron, cfg, kjob, tgbot, storageProvider)
@@ -86,12 +89,17 @@ func Run() {
 
 	// Graceful Shutdown
 
+	// Make new channel of size = 1
 	quit := make(chan os.Signal, 1)
+
+	// Listen system 15 and 2 signals, when one of they called, send info to quit channel
 	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
 
+	// Read channel, this block of code lock this thread, until someone writes to the channel
 	<-quit
 
-	// Wait jobs and stop
+	// When someone call SIGTERM or SIGINT signals, we'll get to here
+	// cron.Stop() -> Wait jobs and stop
 	cron.Stop()
 
 	klog.Info("[Cron] Stopped! Exit")

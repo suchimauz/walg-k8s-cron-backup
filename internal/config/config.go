@@ -3,8 +3,9 @@ package config
 import (
 	"time"
 
-	_ "github.com/joho/godotenv/autoload"
 	"github.com/kelseyhightower/envconfig"
+
+	_ "github.com/joho/godotenv/autoload"
 )
 
 const (
@@ -17,7 +18,7 @@ var TimeZone *time.Location
 
 type (
 	Config struct {
-		tz          string `envconfig:"app_timezone" default:"UTC"` // String timezone format
+		Timezone    string `envconfig:"app_timezone" default:"UTC"` // String timezone format
 		Kubernetes  KubernetesConfig
 		Exec        ExecConfig
 		Cron        CronConfig
@@ -85,7 +86,7 @@ func Init() (*Config, error) {
 	}
 
 	// Parse timezone from cfg.tz or return err
-	TimeZone, err = time.LoadLocation(cfg.tz)
+	TimeZone, err = time.LoadLocation(cfg.Timezone)
 	if err != nil {
 		return nil, err
 	}
