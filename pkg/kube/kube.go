@@ -32,6 +32,7 @@ func NewKubeJob(client *kubernetes.Clientset, k8scfg *rest.Config, namespace str
 		return nil, err
 	}
 
+	// Get need container in pod
 	container, err := findContainerByName(pod, containerName)
 	if err != nil {
 		return nil, err
@@ -76,6 +77,7 @@ func findContainerByName(pod *v1.Pod, containerName string) (*v1.Container, erro
 		}
 	}
 
+	// When not found container
 	if len(foundContainers) < 1 {
 		errMsg := fmt.Sprintf("Container %s in pod %s/%s not found!", containerName, pod.Namespace, pod.Name)
 
@@ -119,6 +121,7 @@ func (kj *KubeJob) Exec(command string, stdin io.Reader) (string, error) {
 	}
 
 	var stdout, stderr bytes.Buffer
+	// Write container stream to buffers
 	err = exec.Stream(remotecommand.StreamOptions{
 		Stdin:  stdin,
 		Stdout: &stdout,

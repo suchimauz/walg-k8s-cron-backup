@@ -17,14 +17,15 @@ var TimeZone *time.Location
 
 type (
 	Config struct {
-		tz         string `envconfig:"app_timezone" default:"UTC"` // String timezone format
-		Kubernetes Kubernetes
-		Exec       Exec
-		Cron       Cron
-		Telegram   Telegram
+		tz          string `envconfig:"app_timezone" default:"UTC"` // String timezone format
+		Kubernetes  KubernetesConfig
+		Exec        ExecConfig
+		Cron        CronConfig
+		Telegram    TelegramConfig
+		FileStorage FileStorageConfig
 	}
 
-	Kubernetes struct {
+	KubernetesConfig struct {
 		// Kind default Pod
 		ApiVersion    string `ignored:"true" default:"v1"`
 		Host          string `envconfig:"k8s_host" required:"true"`
@@ -35,34 +36,41 @@ type (
 		ContainerName string `envconfig:"k8s_pod_container_name" required:"true"`
 	}
 
-	Exec struct {
+	ExecConfig struct {
 		Backup string `envconfig:"exec_backup" required:"true"`
 		Info   string `envconfig:"exec_info"`
 	}
 
-	Cron struct {
+	CronConfig struct {
 		Backup string `envconfig:"cron_backup" required:"true"`
 		Info   string `envconfig:"cron_info"`
 	}
 
-	Telegram struct {
+	TelegramConfig struct {
 		BotToken     string `envconfig:"tg_bot_token"`
-		Notification TelegramNotification
+		Notification TelegramNotificationConfig
 	}
 
-	TelegramNotification struct {
-		Backup TelegramNotificationBackup
-		Info   TelegramNotificationInfo
+	TelegramNotificationConfig struct {
+		Backup TelegramNotificationBackupConfig
+		Info   TelegramNotificationInfoConfig
 	}
 
-	TelegramNotificationBackup struct {
+	TelegramNotificationBackupConfig struct {
 		Enabled bool    `envconfig:"tg_backup_notification_enabled" default:"true"`
 		ChatIds []int64 `envconfig:"tg_backup_notification_chats" split_words:"true"`
 	}
 
-	TelegramNotificationInfo struct {
+	TelegramNotificationInfoConfig struct {
 		Enabled bool    `envconfig:"tg_info_notification_enabled" default:"true"`
 		ChatIds []int64 `envconfig:"tg_info_notification_chats" split_words:"true"`
+	}
+
+	FileStorageConfig struct {
+		Endpoint  string `envconfig:"fs_host"`
+		Bucket    string `envconfig:"fs_bucket"`
+		AccessKey string `envconfig:"fs_access_key"`
+		SecretKey string `envconfig:"fs_secret_key"`
 	}
 )
 

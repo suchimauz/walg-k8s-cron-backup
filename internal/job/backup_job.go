@@ -9,12 +9,12 @@ import (
 
 type BackupJob struct {
 	KubeJob        *kube.KubeJob
-	Notification   *config.TelegramNotificationBackup
+	Notification   *config.TelegramNotificationBackupConfig
 	Exec           string
 	TelegramBotApi *tgbotapi.BotAPI
 }
 
-func NewBackupJob(telegramCfg *config.Telegram, kj *kube.KubeJob, botapi *tgbotapi.BotAPI, exec string) *BackupJob {
+func NewBackupJob(telegramCfg *config.TelegramConfig, kj *kube.KubeJob, botapi *tgbotapi.BotAPI, exec string) *BackupJob {
 	return &BackupJob{
 		KubeJob:        kj,
 		Notification:   &telegramCfg.Notification.Backup,
