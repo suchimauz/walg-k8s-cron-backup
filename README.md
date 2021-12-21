@@ -16,6 +16,7 @@ K8S_LABEL_SELECTOR=<label_selector> # example: app=db,env=dev
 K8S_POD_CONTAINER_NAME=<container_name> # example: backend
 
 # Filestorage: use for example Minio
+# For save backups info log file
 FS_HOST=<fs_host>
 FS_BUCKET=<fs_bucket>
 FS_ACCESS_KEY=<fs_access_key>
