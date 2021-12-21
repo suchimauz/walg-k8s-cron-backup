@@ -1,16 +1,23 @@
 package config
 
 import (
+	"time"
+
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/kelseyhightower/envconfig"
 )
 
 const (
-	appName = "cron-backup"
+	appName = "cron_backup"
 )
+
+// Not modify this variable!!!
+// This variable will be filled when initializing the config
+var TimeZone *time.Location
 
 type (
 	Config struct {
+		tz         string `envconfig:"app_timezone" default:"UTC"` // String timezone format
 		Kubernetes Kubernetes
 		Exec       Exec
 		Cron       Cron
@@ -62,7 +69,14 @@ type (
 func Init() (*Config, error) {
 	var cfg Config
 
+	// Parse variables from environment or return err
 	err := envconfig.Process(appName, &cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	// Parse timezone from cfg.tz or return err
+	TimeZone, err = time.LoadLocation(cfg.tz)
 	if err != nil {
 		return nil, err
 	}
