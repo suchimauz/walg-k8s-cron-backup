@@ -153,7 +153,7 @@ func getOnlyFullBackups(bi []*BackupInfo) []*BackupInfo {
 	// Get only full backups info, check backup name
 	for _, backupInfo := range bi {
 		matched, _ := regexp.MatchString("^(.*)_(.*)_(.*)$", backupInfo.BackupName)
-		if matched {
+		if !matched {
 			preparedBackupsInfo = append(preparedBackupsInfo, backupInfo)
 		}
 	}
