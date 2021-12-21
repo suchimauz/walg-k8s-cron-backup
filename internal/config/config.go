@@ -71,6 +71,7 @@ type (
 		Bucket    string `envconfig:"fs_bucket"`
 		AccessKey string `envconfig:"fs_access_key"`
 		SecretKey string `envconfig:"fs_secret_key"`
+		Secure    bool   `envconfig:"fs_secure" default:"true"`
 	}
 )
 

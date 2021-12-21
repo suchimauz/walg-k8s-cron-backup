@@ -101,7 +101,7 @@ func Run() {
 func newStorageProvider(cfg *config.Config) (storage.Provider, error) {
 	client, err := minio.New(cfg.FileStorage.Endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(cfg.FileStorage.AccessKey, cfg.FileStorage.SecretKey, ""),
-		Secure: true,
+		Secure: cfg.FileStorage.Secure,
 	})
 	if err != nil {
 		return nil, err
