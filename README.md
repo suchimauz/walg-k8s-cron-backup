@@ -23,6 +23,7 @@ FS_HOST=<fs_host>
 FS_BUCKET=<fs_bucket>
 FS_ACCESS_KEY=<fs_access_key>
 FS_SECRET_KEY=<fs_secret_key>
+FS_SECURE=<boolean> # default = true
 
 # example: wal-g backup-push <path_to_postgres_data>
 EXEC_BACKUP=<exec_backup> 
