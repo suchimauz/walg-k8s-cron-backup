@@ -19,9 +19,9 @@ import (
 	klog "github.com/suchimauz/walg-k8s-cron-backup/pkg/logger"
 )
 
-func Run() {
+func Run(dotenv func()) {
 	// Initialize config
-	cfg, err := config.Init()
+	cfg, err := config.Init(dotenv)
 	if err != nil {
 		klog.Errorf("[ENV] %s", err.Error())
 
@@ -91,7 +91,7 @@ func Run() {
 	// Start the cron scheduler in its own goroutine
 	cron.Start()
 
-	klog.Infof("[Cron] Started! JobIds %a", jobIds)
+	klog.Infof("[Cron] Started! JobIds %v", jobIds)
 
 	// Graceful Shutdown
 
