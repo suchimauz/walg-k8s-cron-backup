@@ -41,6 +41,8 @@ func (bj *BackupJob) Run() {
 
 	if bj.Notification.Enabled {
 		// Send notification about start backup db
+		klog.Infof("[BackupJob] %s: Send start backup telegram notifications", guid)
+
 		bj.sendNotifications(startMsg)
 	}
 
@@ -57,7 +59,7 @@ func (bj *BackupJob) Run() {
 		// Make end message
 		endMsg := bj.endBackupMessage(guid)
 
-		klog.Infof("[BackupJob] %s: Send notifications", guid)
+		klog.Infof("[BackupJob] %s: Send end backup telegram notifications", guid)
 
 		// Send notification about end backup db
 		bj.sendNotifications(endMsg)
