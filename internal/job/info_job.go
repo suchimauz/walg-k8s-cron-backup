@@ -38,36 +38,39 @@ func NewInfoJob(telegramCfg *config.TelegramConfig, kj *kube.KubeJob, botapi *tg
 
 // Main func for Run this job, implements for cron.Job interface
 func (ij *InfoJob) Run() {
-	klog.Info("[NotifierJob] Start processing Job!")
+	// If TG_INFO_NOTIFICATION_ENABLED is true
+	if ij.Notification.Enabled {
+		klog.Info("[NotifierJob] Start processing Job!")
 
-	// Execute on container EXEC_BACKUP cmd and return backups info
-	backupsJson, err := ij.KubeJob.Exec(ij.Exec, nil)
-	if err != nil {
-		klog.Errorf("[NotifierJob] %s", err.Error())
-		klog.Error("[NotifierJob] Exit Job!")
+		// Execute on container EXEC_BACKUP cmd and return backups info
+		backupsJson, err := ij.KubeJob.Exec(ij.Exec, nil)
+		if err != nil {
+			klog.Errorf("[NotifierJob] %s", err.Error())
+			klog.Error("[NotifierJob] Exit Job!")
 
-		return
+			return
+		}
+
+		// Parse backups info json to array of objects
+		backupsInfo, err := parseBackupsInfoJson(backupsJson)
+		if err != nil {
+			klog.Errorf("[NotifierJob] parse json: %s", err.Error())
+			klog.Error("[NotifierJob] Exit Job!")
+
+			return
+		}
+
+		// Send tg notifications
+		ij.sendNotifications(backupsInfo)
+
+		// Save backupsInfo log file to storage
+		err = ij.saveBackupsInfoFile(backupsInfo)
+		if err != nil {
+			klog.Errorf("[NotifierJob] Error on upload file: %s", err.Error())
+		}
+
+		klog.Info("[NotifierJob] End processing job!")
 	}
-
-	// Parse backups info json to array of objects
-	backupsInfo, err := parseBackupsInfoJson(backupsJson)
-	if err != nil {
-		klog.Errorf("[NotifierJob] parse json: %s", err.Error())
-		klog.Error("[NotifierJob] Exit Job!")
-
-		return
-	}
-
-	// Send tg notifications
-	ij.sendNotifications(backupsInfo)
-
-	// Save backupsInfo log file to storage
-	err = ij.saveBackupsInfoFile(backupsInfo)
-	if err != nil {
-		klog.Errorf("[NotifierJob] Error on upload file: %s", err.Error())
-	}
-
-	klog.Info("[NotifierJob] End processing job!")
 }
 
 // Private method for send telegram notifications
