@@ -39,16 +39,16 @@ type (
 
 	ExecConfig struct {
 		Backup string `envconfig:"exec_backup" required:"true"`
-		Info   string `envconfig:"exec_info" required:"true"`
+		Info   string `envconfig:"exec_info" default:"echo 1"`
 	}
 
 	CronConfig struct {
 		Backup string `envconfig:"cron_backup" required:"true"`
-		Info   string `envconfig:"cron_info" required:"true"`
+		Info   string `envconfig:"cron_info" default:"0 0 0 31 2 1"` // Never execute
 	}
 
 	TelegramConfig struct {
-		BotToken     string `envconfig:"tg_bot_token" required:"true"`
+		BotToken     string `envconfig:"tg_bot_token" required:"true"` // This is test bot
 		Notification TelegramNotificationConfig
 	}
 
@@ -58,13 +58,13 @@ type (
 	}
 
 	TelegramNotificationBackupConfig struct {
-		Enabled bool    `envconfig:"tg_backup_notification_enabled" default:"true"`
-		ChatIds []int64 `envconfig:"tg_backup_notification_chats" split_words:"true"`
+		Enabled bool    `envconfig:"tg_backup_notification_enabled" default:"false"`
+		ChatIds []int64 `envconfig:"tg_backup_notification_chats" split_words:"true" default:"000000"`
 	}
 
 	TelegramNotificationInfoConfig struct {
-		Enabled bool    `envconfig:"tg_info_notification_enabled" default:"true"`
-		ChatIds []int64 `envconfig:"tg_info_notification_chats" split_words:"true"`
+		Enabled bool    `envconfig:"tg_info_notification_enabled" default:"false"`
+		ChatIds []int64 `envconfig:"tg_info_notification_chats" split_words:"true" default:"000000"`
 	}
 
 	FileStorageConfig struct {
