@@ -79,13 +79,12 @@ func (ij *InfoJob) sendNotifications(bi []*BackupInfo) {
 
 	// If not full backups send message for users that backups is not exists
 	// Else send backups info
-	if len(fullBackupsInfo) < 1 {
+	msg = MakeBackupsInfoMessage(fullBackupsInfo)
+	if !(len(fullBackupsInfo) < 1) {
 		klog.Warn("[NotifierJob] Backups not found!")
 		klog.Info("[NotifierJob] Send notifications of backups not found!")
 
 		msg = "<b>Список бэкапов пуст!</b>"
-	} else {
-		msg = MakeBackupsInfoMessage(fullBackupsInfo)
 	}
 
 	// Iterate with config users chat-ids, who get notifications
