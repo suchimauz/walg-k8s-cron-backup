@@ -14,3 +14,6 @@ test:
 
 test.coverage:
 	go tool cover -func=cover.out
+
+lint:
+	golangci-lint run
