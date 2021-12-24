@@ -9,6 +9,7 @@ Create **.env** file and set support variables
 
 ```
 APP_TIMEZONE=<tz_string> # default: UTC, example: Europe/Paris
+APP_SAVE_LOGS=<boolean> # default: false
 
 K8S_HOST=<host> # example: kube.domain.com or kube.domain.com:6443
 K8S_INSECURE=<boolean> # default = false
@@ -19,6 +20,7 @@ K8S_POD_CONTAINER_NAME=<container_name> # example: backend
 
 # Filestorage: use for example Minio
 # For save backups info log file
+# Required if APP_SAVE_LOGS is true
 FS_HOST=<fs_host>
 FS_BUCKET=<fs_bucket>
 FS_ACCESS_KEY=<fs_access_key>
@@ -26,8 +28,10 @@ FS_SECRET_KEY=<fs_secret_key>
 FS_SECURE=<boolean> # default = true
 
 # example: wal-g backup-push <path_to_postgres_data>
+# required
 EXEC_BACKUP=<exec_backup> 
 # example: wal-g backup-list --json --pretty --detail
+# required when APP_SAVE_LOGS is true or TG_INFO_NOTIFICATION_ENABLED is true
 EXEC_INFO=<exec_info>
 
 
@@ -37,15 +41,17 @@ TG_BACKUP_NOTIFICATION_ENABLED=true # default=false
 TG_BACKUP_NOTIFICATION_CHATS=<chat_ids>
 
 TG_INFO_NOTIFICATION_ENABLED=true # default=false
-# example: -1232345,2910434
+# optional | example: -1232345,2910434
 TG_INFO_NOTIFICATION_CHATS=<chat_ids> 
 
 # cron: Second | Minute | Hour | Dom | Month | Dow
 # for execute EXEC_BACKUP command
 # example: 0 0 21 * * *
+# required
 CRON_BACKUP=<cron_backup>
 # for execute EXEC_BACKUP command
 # example: 0 30 * * * *
+# required when APP_SAVE_LOGS is true or TG_INFO_NOTIFICATION_ENABLED is true
 CRON_INFO=<cron_info>
 ```
 

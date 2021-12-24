@@ -1,6 +1,8 @@
 package config
 
 import (
+	"errors"
+	"fmt"
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
@@ -19,6 +21,7 @@ var TimeZone *time.Location
 type (
 	Config struct {
 		Timezone    string `envconfig:"app_timezone" default:"UTC"` // String timezone format
+		SaveLogs    bool   `envconfig:"app_save_logs" default:"false"`
 		Kubernetes  KubernetesConfig
 		Exec        ExecConfig
 		Cron        CronConfig
@@ -44,11 +47,11 @@ type (
 
 	CronConfig struct {
 		Backup string `envconfig:"cron_backup" required:"true"`
-		Info   string `envconfig:"cron_info" default:"0 0 0 31 2 1"` // Never execute
+		Info   string `envconfig:"cron_info"`
 	}
 
 	TelegramConfig struct {
-		BotToken     string `envconfig:"tg_bot_token" required:"true"` // This is test bot
+		BotToken     string `envconfig:"tg_bot_token"`
 		Notification TelegramNotificationConfig
 	}
 
@@ -91,5 +94,70 @@ func Init() (*Config, error) {
 		return nil, err
 	}
 
+	if err := cfg.validate(); err != nil {
+		return nil, err
+	}
+
 	return &cfg, nil
+}
+
+func (cfg *Config) validate() error {
+	// When one of telegram notifications are enabled - required bot token
+	if cfg.Telegram.NotificationsEnabled() {
+		if cfg.Telegram.BotToken == "" {
+			return errors.New("Telegram bot token is required, when one of notifications enable is true")
+		}
+	}
+
+	// When save logs is true, file storage environment are required
+	if cfg.FileStorageRequired() {
+		if err := cfg.FileStorage.allRequired(); err != nil {
+			msg := fmt.Sprintf("If save logs config value is true: %s", err.Error())
+
+			return errors.New(msg)
+		}
+	}
+
+	// When save logs is enabled or telegram info notifications are enabled - cron.Info is required
+	if cfg.CronInfoRequired() {
+		if cfg.Cron.Info == "" {
+			return errors.New("If save logs is enabled or telegram info notifications are enabled: cron info is required")
+		}
+		if cfg.Exec.Info == "" {
+			return errors.New("If save logs is enabled or telegram info notifications are enabled: exec info is required")
+		}
+	}
+
+	return nil
+}
+
+func (cfg *Config) CronInfoRequired() bool {
+	return cfg.SaveLogs || cfg.Telegram.Notification.Info.Enabled
+}
+
+func (cfg *Config) FileStorageRequired() bool {
+	return cfg.SaveLogs
+}
+
+// Private func for set all FileStorageConfig fields required
+func (fscfg *FileStorageConfig) allRequired() error {
+	if fscfg.Endpoint == "" {
+		return errors.New("FileStorage Endpoint is required")
+	}
+	if fscfg.Bucket == "" {
+		return errors.New("FileStorage Bucket is required")
+	}
+	if fscfg.AccessKey == "" {
+		return errors.New("FileStorage AccessKey is required")
+	}
+	if fscfg.SecretKey == "" {
+		return errors.New("FileStorage SecretKey is required")
+	}
+
+	return nil
+}
+
+// Func for check telegram notifications enabled
+func (tgcfg *TelegramConfig) NotificationsEnabled() bool {
+	return tgcfg.Notification.Info.Enabled || tgcfg.Notification.Backup.Enabled
 }

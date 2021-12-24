@@ -56,20 +56,26 @@ func Run() {
 		return
 	}
 
-	// Create new object for telegram api
-	tgbot, err := tgbotapi.NewBotAPI(cfg.Telegram.BotToken)
-	if err != nil {
-		klog.Errorf("[TelegramBotApi] %s", err.Error())
+	// Create new object for telegram api when one of notification is enabled
+	var tgbot *tgbotapi.BotAPI
+	if cfg.Telegram.NotificationsEnabled() {
+		tgbot, err = tgbotapi.NewBotAPI(cfg.Telegram.BotToken)
+		if err != nil {
+			klog.Errorf("[TelegramBotApi] %s", err.Error())
 
-		return
+			return
+		}
 	}
 
-	// Init storage provider - minio
-	storageProvider, err := newStorageProvider(cfg)
-	if err != nil {
-		klog.Errorf("[FileStorage] Provider: %s", err.Error())
+	// Init storage provider - minio if save logs is enabled
+	var storageProvider storage.Provider
+	if cfg.FileStorageRequired() {
+		storageProvider, err = newStorageProvider(cfg)
+		if err != nil {
+			klog.Errorf("[FileStorage] Provider: %s", err.Error())
 
-		return
+			return
+		}
 	}
 
 	// Make new cron object, calls constructor

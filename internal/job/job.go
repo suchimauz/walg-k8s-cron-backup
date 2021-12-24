@@ -16,18 +16,21 @@ func InsertJobs(cron *cr.Cron, cfg *config.Config, kj *kube.KubeJob, botapi *tgb
 	var eId cr.EntryID
 	var err error
 
-	// Create InfoJob - object for manage job, which send notifications of backups and etc
-	// BackupJob - object for manage job, which send command for backuping postgres db and etc.
-	ij := NewInfoJob(&cfg.Telegram, kj, botapi, storageProvider, cfg.Exec.Info)
-	bj := NewBackupJob(&cfg.Telegram, kj, botapi, cfg.Exec.Backup)
+	// InfoJob - object for manage job, which send notifications of backups and etc
+	// Required when save logs is enabled or telegram notification is enabled
+	if cfg.CronInfoRequired() {
+		ij := NewInfoJob(&cfg.Telegram, kj, botapi, storageProvider, cfg.Exec.Info)
 
-	// Add to exists cron object new InfoJob object
-	eId, err = cron.AddJob(cfg.Cron.Info, ij)
-	if err != nil {
-		return nil, err
+		// Add to exists cron object new InfoJob object
+		eId, err = cron.AddJob(cfg.Cron.Info, ij)
+		if err != nil {
+			return nil, err
+		}
+		entryIds = append(entryIds, eId)
 	}
-	entryIds = append(entryIds, eId)
 
+	// BackupJob - object for manage job, which send command for backuping postgres db and etc.
+	bj := NewBackupJob(&cfg.Telegram, kj, botapi, cfg.Exec.Backup)
 	// Add to exists cron object new BackupJob object
 	eId, err = cron.AddJob(cfg.Cron.Backup, bj)
 	if err != nil {
