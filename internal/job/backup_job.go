@@ -45,9 +45,9 @@ func (bj *BackupJob) Run() {
 
 	// Execute on container EXEC_BACKUP cmd and return backups info
 	// !!! For some reason wal-g writes logs to stderr !!!
-	_, err := bj.KubeJob.Exec(bj.Exec, nil)
-	if err != nil {
-		klog.Infof("[BackupJob] %s", err.Error())
+	stdout, stderr := bj.KubeJob.Exec(bj.Exec, nil)
+	if stderr != nil {
+		klog.Infof("[BackupJob] %s", stderr.Error())
 
 		if bj.Notification.Enabled {
 			// Make end message
@@ -56,10 +56,19 @@ func (bj *BackupJob) Run() {
 			bj.sendNotifications(endMsg)
 		}
 
-		klog.Infof("[BackupJob] End processing Job!")
-
 		return
+	} else {
+		klog.Infof("[BackupJob] %s", stdout)
+
+		if bj.Notification.Enabled {
+			// Make end message
+			endMsg := bj.endBackupMessage(guid)
+			// Send notification about end backup db
+			bj.sendNotifications(endMsg)
+		}
 	}
+
+	klog.Infof("[BackupJob] End processing Job!")
 }
 
 // Private method for send telegram notifications
@@ -85,7 +94,7 @@ func (bj *BackupJob) startBackupMessage() (uuid.UUID, string) {
 	id := uuid.New()
 
 	// Get now date with Russian format
-	date := utils.NowDateTz().Format("02.01.2006 15:04:05")
+	date := utils.NowDateTz().Format("02.01.2006 15:04")
 
 	msg := fmt.Sprintf("<b>%s</b>: start backup", strings.ToUpper(bj.KubeJob.Pod.Namespace))
 	msg += fmt.Sprintf("\n\nUuid: <b>%s</b>", id.String())
@@ -98,7 +107,7 @@ func (bj *BackupJob) startBackupMessage() (uuid.UUID, string) {
 // Private method for generate end backup message
 func (bj *BackupJob) endBackupMessage(id uuid.UUID) string {
 	// Get now date with Russian format
-	date := utils.NowDateTz().Format("02.01.2006 15:04:05")
+	date := utils.NowDateTz().Format("02.01.2006 15:04")
 
 	msg := fmt.Sprintf("<b>%s</b>: end backup", strings.ToUpper(bj.KubeJob.Pod.Namespace))
 	msg += fmt.Sprintf("\n\nUuid: <b>%s</b>", id.String())
