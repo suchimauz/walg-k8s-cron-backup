@@ -67,6 +67,7 @@ func (ij *InfoJob) Run() {
 
 	// If TG_INFO_NOTIFICATION_ENABLED is true
 	if ij.Notification.Enabled {
+		klog.Info("[NotifierJob] Send telegram notifications!")
 		// Send tg notifications
 		ij.sendNotifications(backupsInfo)
 	}
@@ -90,11 +91,13 @@ func (ij *InfoJob) sendNotifications(bi []*BackupInfo) {
 	// If not full backups send message for users that backups is not exists
 	// Else send backups info
 	msg = MakeBackupsInfoMessage(fullBackupsInfo)
-	if !(len(fullBackupsInfo) < 1) {
+	if len(fullBackupsInfo) < 1 {
 		klog.Warn("[NotifierJob] Backups not found!")
 		klog.Info("[NotifierJob] Send notifications of backups not found!")
 
-		msg = "<b>Список бэкапов пуст!</b>"
+		msg = "<b>Список бэкапов:</b>"
+		msg += "\n<code>-------------------</code>"
+		msg += "\nБэкапы отсутствуют"
 	}
 
 	// Iterate with config users chat-ids, who get notifications
@@ -118,12 +121,12 @@ func MakeBackupsInfoMessage(bi []*BackupInfo) string {
 
 	for _, backupInfo := range bi {
 		// Bytes to Gigabytes
-		backupSize := backupInfo.CompressedSize / (1024 * 1024 * 1024)
+		backupSize := float32(backupInfo.CompressedSize) / (1024 * 1024 * 1024)
 
 		msg += "\n<code>-------------------</code>"
 		msg += fmt.Sprintf("\nНазвание: <b>%s</b>", backupInfo.BackupName)
 		msg += fmt.Sprintf("\nДата: %s", backupInfo.Time.In(config.TimeZone).Format("02.01.2006 15:04"))
-		msg += fmt.Sprintf("\nРазмер бэкапа: <b>%dGB</b>", backupSize)
+		msg += fmt.Sprintf("\nРазмер бэкапа: <b>%0.2f GB</b>", backupSize)
 	}
 
 	return msg
