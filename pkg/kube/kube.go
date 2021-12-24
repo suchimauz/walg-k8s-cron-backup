@@ -1,7 +1,6 @@
 package kube
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -87,7 +86,7 @@ func findContainerByName(pod *v1.Pod, containerName string) (*v1.Container, erro
 	return &foundContainer, nil
 }
 
-func (kj *KubeJob) Exec(command string, stdin io.Reader) (string, error) {
+func (kj *KubeJob) Exec(command string, stdin io.Reader, stdout io.Writer, stderr io.Writer) error {
 	req := kj.Client.CoreV1().RESTClient().Post().
 		Resource("pods").
 		Name(kj.Pod.Name).
@@ -96,7 +95,7 @@ func (kj *KubeJob) Exec(command string, stdin io.Reader) (string, error) {
 	scheme := runtime.NewScheme()
 	err := v1.AddToScheme(scheme)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	parameterCodec := runtime.NewParameterCodec(scheme)
@@ -116,25 +115,19 @@ func (kj *KubeJob) Exec(command string, stdin io.Reader) (string, error) {
 	// Execute over remotecommand
 	exec, err := remotecommand.NewSPDYExecutor(kj.KubeConfig, "POST", req.URL())
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	var stdout, stderr bytes.Buffer
 	// Write container stream to buffers
 	err = exec.Stream(remotecommand.StreamOptions{
 		Stdin:  stdin,
-		Stdout: &stdout,
-		Stderr: &stderr,
+		Stdout: stdout,
+		Stderr: stderr,
 		Tty:    false,
 	})
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	// return error message if stderr with execute not blank
-	if stderr.String() != "" {
-		return "", errors.New(stderr.String())
-	}
-
-	return stdout.String(), nil
+	return nil
 }
