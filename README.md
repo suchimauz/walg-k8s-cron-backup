@@ -30,7 +30,7 @@ APP_TIMEZONE=<tz_string> # default: UTC, example: Europe/Paris
 APP_SAVE_LOGS=<boolean> # default: false
 
 K8S_HOST=<host> # example: kube.domain.com or kube.domain.com:6443
-K8S_INSECURE=<boolean> # default = false
+K8S_INSECURE=<boolean> # default = true
 K8S_AUTH_TOKEN=<token> # bearer token
 K8S_NAMESPACE=<namespace> # namespace
 K8S_LABEL_SELECTOR=<label_selector> # example: app=db,env=dev
