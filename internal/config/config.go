@@ -6,8 +6,6 @@ import (
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
-
-	_ "github.com/joho/godotenv/autoload"
 )
 
 const (
@@ -31,9 +29,9 @@ type (
 
 	KubernetesConfig struct {
 		// Kind default Pod
-		ApiVersion    string `ignored:"true" default:"v1"`
+		ApiVersion    string `default:"v1"`
 		Host          string `envconfig:"k8s_host" required:"true"`
-		Insecure      bool   `envconfig:"k8s_insecure" default:"false"`
+		Insecure      bool   `envconfig:"k8s_insecure" default:"true"`
 		BearerToken   string `envconfig:"k8s_auth_token" required:"true"`
 		Namespace     string `envconfig:"k8s_namespace" required:"true"`
 		LabelSelector string `envconfig:"k8s_label_selector" required:"true"`
@@ -62,12 +60,12 @@ type (
 
 	TelegramNotificationBackupConfig struct {
 		Enabled bool    `envconfig:"tg_backup_notification_enabled" default:"false"`
-		ChatIds []int64 `envconfig:"tg_backup_notification_chats" split_words:"true" default:"000000"`
+		ChatIds []int64 `envconfig:"tg_backup_notification_chats" split_words:"true"`
 	}
 
 	TelegramNotificationInfoConfig struct {
 		Enabled bool    `envconfig:"tg_info_notification_enabled" default:"false"`
-		ChatIds []int64 `envconfig:"tg_info_notification_chats" split_words:"true" default:"000000"`
+		ChatIds []int64 `envconfig:"tg_info_notification_chats" split_words:"true"`
 	}
 
 	FileStorageConfig struct {
@@ -79,8 +77,10 @@ type (
 	}
 )
 
-func Init() (*Config, error) {
+func Init(dotenv func()) (*Config, error) {
 	var cfg Config
+
+	dotenv()
 
 	// Parse variables from environment or return err
 	err := envconfig.Process(appName, &cfg)
