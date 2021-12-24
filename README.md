@@ -32,11 +32,11 @@ EXEC_INFO=<exec_info>
 
 
 TG_BOT_TOKEN=<bot_token>
-TG_BACKUP_NOTIFICATION_ENABLED=true # default=true
+TG_BACKUP_NOTIFICATION_ENABLED=true # default=false
 # example: -1232345,2910434
 TG_BACKUP_NOTIFICATION_CHATS=<chat_ids>
 
-TG_INFO_NOTIFICATION_ENABLED=true # default=true
+TG_INFO_NOTIFICATION_ENABLED=true # default=false
 # example: -1232345,2910434
 TG_INFO_NOTIFICATION_CHATS=<chat_ids> 
 
