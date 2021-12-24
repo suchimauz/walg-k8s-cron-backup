@@ -5,6 +5,24 @@ Service for cron backup Postgres database with WAL-G in k8s cluster
 
 Create **.env** file and set support variables
 
+## Kubernetes token
+
+If you not have kubernetes Bearer Token but have access to kubectl cluster - you may get token from secret
+
+```shell
+kubectl --namespace kube-system get secret
+```
+
+If you use default user for access cluster - search **default-token-XXXXX**, or use your custom token
+After get name you token and execute this command
+
+```shell
+kubectl --namespace kube-system describe secret default-token-XXXXX
+```
+
+And get **token** from response data
+It's your Bearer Token for access Kubernetes API
+
 ## Support environment variables
 
 ```
