@@ -38,8 +38,10 @@ func (bj *BackupJob) Run() {
 	// Make start message for send notification
 	guid, startMsg := bj.startBackupMessage()
 
-	// Send notification about start backup db
-	bj.sendNotifications(startMsg)
+	if bj.Notification.Enabled {
+		// Send notification about start backup db
+		bj.sendNotifications(startMsg)
+	}
 
 	// Execute on container EXEC_BACKUP cmd and return backups info
 	// !!! For some reason wal-g writes logs to stderr !!!
@@ -47,11 +49,13 @@ func (bj *BackupJob) Run() {
 	if err != nil {
 		klog.Infof("[BackupJob] %s", err.Error())
 
-		// Make end message
-		endMsg := bj.endBackupMessage(guid)
+		if bj.Notification.Enabled {
+			// Make end message
+			endMsg := bj.endBackupMessage(guid)
+			// Send notification about end backup db
+			bj.sendNotifications(endMsg)
+		}
 
-		// Send notification about end backup db
-		bj.sendNotifications(endMsg)
 		klog.Infof("[BackupJob] End processing Job!")
 
 		return
