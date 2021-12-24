@@ -10,5 +10,7 @@ func main() {
 }
 
 func dotenv() {
-	godotenv.Load()
+	if err := godotenv.Load(); err != nil {
+		return
+	}
 }

@@ -174,9 +174,12 @@ func (ij *InfoJob) saveBackupsInfoFile(bi []*BackupInfo) error {
 func getOnlyFullBackups(bi []*BackupInfo) []*BackupInfo {
 	var preparedBackupsInfo []*BackupInfo
 
+	// Initial regexp for check backup is full
+	re, _ := regexp.Compile("^(.*)_(.*)_(.*)$")
+
 	// Get only full backups info, check backup name
 	for _, backupInfo := range bi {
-		matched, _ := regexp.MatchString("^(.*)_(.*)_(.*)$", backupInfo.BackupName)
+		matched := re.MatchString(backupInfo.BackupName)
 		if !matched {
 			preparedBackupsInfo = append(preparedBackupsInfo, backupInfo)
 		}
