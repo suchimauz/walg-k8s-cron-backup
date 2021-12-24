@@ -2,6 +2,7 @@ package job
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/google/uuid"
@@ -44,28 +45,22 @@ func (bj *BackupJob) Run() {
 	}
 
 	// Execute on container EXEC_BACKUP cmd and return backups info
-	// !!! For some reason wal-g writes logs to stderr !!!
-	stdout, stderr := bj.KubeJob.Exec(bj.Exec, nil)
-	if stderr != nil {
-		klog.Infof("[BackupJob] %s", stderr.Error())
-
-		if bj.Notification.Enabled {
-			// Make end message
-			endMsg := bj.endBackupMessage(guid)
-			// Send notification about end backup db
-			bj.sendNotifications(endMsg)
-		}
+	// Write logs to os stdout and stderr
+	if err := bj.KubeJob.Exec(bj.Exec, nil, os.Stdout, os.Stderr); err != nil {
+		klog.Errorf("[BackupJob] %s", err.Error())
+		klog.Error("[BackupJob] Exit Job!")
 
 		return
-	} else {
-		klog.Infof("[BackupJob] %s", stdout)
+	}
 
-		if bj.Notification.Enabled {
-			// Make end message
-			endMsg := bj.endBackupMessage(guid)
-			// Send notification about end backup db
-			bj.sendNotifications(endMsg)
-		}
+	if bj.Notification.Enabled {
+		// Make end message
+		endMsg := bj.endBackupMessage(guid)
+
+		klog.Infof("[BackupJob] %s: Send notifications", guid)
+
+		// Send notification about end backup db
+		bj.sendNotifications(endMsg)
 	}
 
 	klog.Infof("[BackupJob] End processing Job!")

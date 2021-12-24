@@ -42,17 +42,24 @@ func (ij *InfoJob) Run() {
 	if ij.Notification.Enabled {
 		klog.Info("[NotifierJob] Start processing Job!")
 
+		var stdout, stderr bytes.Buffer
+
 		// Execute on container EXEC_BACKUP cmd and return backups info
-		backupsJson, err := ij.KubeJob.Exec(ij.Exec, nil)
-		if err != nil {
+		if err := ij.KubeJob.Exec(ij.Exec, nil, &stdout, &stderr); err != nil {
 			klog.Errorf("[NotifierJob] %s", err.Error())
+			klog.Error("[NotifierJob] Exit Job!")
+
+			return
+		}
+		if stderr.Len() > 0 {
+			klog.Errorf("[NotifierJob] %s", stderr.String())
 			klog.Error("[NotifierJob] Exit Job!")
 
 			return
 		}
 
 		// Parse backups info json to array of objects
-		backupsInfo, err := parseBackupsInfoJson(backupsJson)
+		backupsInfo, err := parseBackupsInfoJson(stdout.String())
 		if err != nil {
 			klog.Errorf("[NotifierJob] parse json: %s", err.Error())
 			klog.Error("[NotifierJob] Exit Job!")
