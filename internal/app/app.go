@@ -97,7 +97,8 @@ func Run(dotenv func()) {
 	}
 
 	// Make new cron object, calls constructor
-	cron := cr.New(cr.WithSeconds())
+	cron := cr.New(cr.WithSeconds(), cr.WithLocation(config.TimeZone))
+
 	// Insert jobs to cron
 	jobIds, err := cjobs.InsertJobs(cron, cfg, kjob, tgbot, storageProvider)
 	if err != nil {
