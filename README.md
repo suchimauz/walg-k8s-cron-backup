@@ -52,7 +52,12 @@ EXEC_BACKUP=<exec_backup>
 # required when APP_SAVE_LOGS is true or TG_INFO_NOTIFICATION_ENABLED is true
 EXEC_INFO=<exec_info>
 
-
+# default:"https://api.telegram.org/bot%s/%s", you may use example: http://192.168.0.7:32193/bot%s/%s
+# first %s = token, second %s = command. 
+TG_BOT_API_ENDPOINT=<tg_api_endpoint>
+# if you need proxy to connect to <tg_api_endpoint>, you may use some http proxy
+# example: http://192.168.1.152:8081, default not use proxy
+TG_BOT_HTTP_PROXY=<tg_bot_http_proxy>
 TG_BOT_TOKEN=<bot_token>
 TG_BACKUP_NOTIFICATION_ENABLED=true # default=false
 # example: -1232345,2910434
