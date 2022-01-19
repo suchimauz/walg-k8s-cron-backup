@@ -49,6 +49,8 @@ type (
 	}
 
 	TelegramConfig struct {
+		ApiEndpoint  string `envconfig:"tg_bot_api_endpoint" default:"https://api.telegram.org/bot%s/%s"`
+		HttpProxy    string `envconfig:"tg_bot_http_proxy"`
 		BotToken     string `envconfig:"tg_bot_token"`
 		Notification TelegramNotificationConfig
 	}

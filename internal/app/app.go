@@ -1,6 +1,8 @@
 package app
 
 import (
+	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"syscall"
@@ -58,8 +60,24 @@ func Run(dotenv func()) {
 
 	// Create new object for telegram api when one of notification is enabled
 	var tgbot *tgbotapi.BotAPI
+	// Create new http client for telegram api
+	tgclient := &http.Client{}
+
+	// When http proxy for telegram api is declared,
+	if cfg.Telegram.HttpProxy != "" {
+		proxy, err := url.Parse(cfg.Telegram.HttpProxy)
+		if err != nil {
+			klog.Errorf("[TelegramBotApi] Proxy: %s", err.Error())
+		}
+
+		transport := &http.Transport{}
+		transport.Proxy = http.ProxyURL(proxy)
+
+		tgclient.Transport = transport
+	}
+
 	if cfg.Telegram.NotificationsEnabled() {
-		tgbot, err = tgbotapi.NewBotAPI(cfg.Telegram.BotToken)
+		tgbot, err = tgbotapi.NewBotAPIWithClient(cfg.Telegram.BotToken, cfg.Telegram.ApiEndpoint, tgclient)
 		if err != nil {
 			klog.Errorf("[TelegramBotApi] %s", err.Error())
 
