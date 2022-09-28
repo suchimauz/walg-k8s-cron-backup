@@ -15,32 +15,29 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+type PodSelector struct {
+	LabelSelector string
+	ContainerName string
+	Namespace     string
+}
+
 // Assembly of necessary methods and fields for kubernetes for project
 type KubeJob struct {
-	Client     *kubernetes.Clientset
-	Pod        *v1.Pod
-	Container  *v1.Container
-	KubeConfig *rest.Config
+	Client      *kubernetes.Clientset
+	KubeConfig  *rest.Config
+	PodSelector *PodSelector
 }
 
 // Create new KubeJob struct object [Constructor]
 func NewKubeJob(client *kubernetes.Clientset, k8scfg *rest.Config, namespace string, labelSelector string, containerName string) (*KubeJob, error) {
-	pod, err := findPodByLabels(client, namespace, labelSelector)
-	if err != nil {
-		return nil, err
-	}
-
-	// Get need container in pod
-	container, err := findContainerByName(pod, containerName)
-	if err != nil {
-		return nil, err
-	}
-
 	return &KubeJob{
 		Client:     client,
 		KubeConfig: k8scfg,
-		Pod:        pod,
-		Container:  container,
+		PodSelector: &PodSelector{
+			LabelSelector: labelSelector,
+			ContainerName: containerName,
+			Namespace:     namespace,
+		},
 	}, nil
 }
 
@@ -86,14 +83,43 @@ func findContainerByName(pod *v1.Pod, containerName string) (*v1.Container, erro
 	return &foundContainer, nil
 }
 
+func (kj *KubeJob) GetPod() (*v1.Pod, error) {
+	pod, err := findPodByLabels(kj.Client, kj.PodSelector.Namespace, kj.PodSelector.LabelSelector)
+	if err != nil {
+		return nil, err
+	}
+
+	return pod, nil
+}
+
+func (kj *KubeJob) GetContainerFromPod(pod *v1.Pod) (*v1.Container, error) {
+	// Get need container in pod
+	container, err := findContainerByName(pod, kj.PodSelector.ContainerName)
+	if err != nil {
+		return nil, err
+	}
+
+	return container, nil
+}
+
 func (kj *KubeJob) Exec(command string, stdin io.Reader, stdout io.Writer, stderr io.Writer) error {
+	pod, err := kj.GetPod()
+	if err != nil {
+		return err
+	}
+
+	container, err := kj.GetContainerFromPod(pod)
+	if err != nil {
+		return err
+	}
+
 	req := kj.Client.CoreV1().RESTClient().Post().
 		Resource("pods").
-		Name(kj.Pod.Name).
-		Namespace(kj.Pod.Namespace).
+		Name(pod.Name).
+		Namespace(pod.Namespace).
 		SubResource("exec")
 	scheme := runtime.NewScheme()
-	err := v1.AddToScheme(scheme)
+	err = v1.AddToScheme(scheme)
 	if err != nil {
 		return err
 	}
@@ -105,7 +131,7 @@ func (kj *KubeJob) Exec(command string, stdin io.Reader, stdout io.Writer, stder
 			"-c",
 			command,
 		},
-		Container: kj.Container.Name,
+		Container: container.Name,
 		Stdin:     stdin != nil,
 		Stdout:    true,
 		Stderr:    true,

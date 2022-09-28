@@ -93,7 +93,7 @@ func (bj *BackupJob) startBackupMessage() (uuid.UUID, string) {
 	// Get now date with Russian format
 	date := utils.NowDateTz().Format("02.01.2006 15:04")
 
-	msg := fmt.Sprintf("<b>%s</b>: start backup", strings.ToUpper(bj.KubeJob.Pod.Namespace))
+	msg := fmt.Sprintf("<b>%s</b>: start backup", strings.ToUpper(bj.KubeJob.PodSelector.Namespace))
 	msg += fmt.Sprintf("\n\nUuid: <b>%s</b>", id.String())
 	msg += fmt.Sprintf("\nCommand: <code>%s</code>", bj.Exec)
 	msg += fmt.Sprintf("\nDate: <b>%s</b>\n", date)
@@ -106,7 +106,7 @@ func (bj *BackupJob) endBackupMessage(id uuid.UUID) string {
 	// Get now date with Russian format
 	date := utils.NowDateTz().Format("02.01.2006 15:04")
 
-	msg := fmt.Sprintf("<b>%s</b>: end backup", strings.ToUpper(bj.KubeJob.Pod.Namespace))
+	msg := fmt.Sprintf("<b>%s</b>: end backup", strings.ToUpper(bj.KubeJob.PodSelector.Namespace))
 	msg += fmt.Sprintf("\n\nUuid: <b>%s</b>", id.String())
 	msg += fmt.Sprintf("\nDate: <b>%s</b>\n", date)
 
